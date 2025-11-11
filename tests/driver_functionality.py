@@ -33,11 +33,11 @@ def parar():
 try:
     print("Avanzar...")
     avanzar(0.3)     # velocidad entre 0.0 y 1.0
-    sleep(2)
+    sleep(0.5)
 
     print("Retroceder...")
     retroceder(0.3)
-    sleep(2)
+    sleep(0.5)
 
     print("Parar")
     parar()
