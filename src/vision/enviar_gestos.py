@@ -18,7 +18,7 @@ URL_COMANDO_ROBOT = f"http://{IP_RASPBERRY_PI}:5000/comando"
 ultimo_comando_enviado = None
 tiempo_ultimo_comando = 0
 
-def enviar_comando(accion, velocidad=0.8):
+def enviar_comando(accion, velocidad=0.3):
     """
     Envía un comando (ej: "AVANZAR") al servidor de la RPi.
     Optimizado para no enviar el mismo comando repetidamente.
