@@ -1,4 +1,7 @@
-from gpiozero import Motor
+from gpiozero import Motor, Device
+from gpiozero.pins.pigpio import PiGPIOFactory
+
+Device.pin_factory = PiGPIOFactory()
 from time import sleep
 
 # Definición de los motores según los pines
@@ -15,11 +18,11 @@ motor_izquierdo = Motor(forward=5, backward=6)
 motor_derecho = Motor(forward=17, backward=27)
 
 # Funciones
-def avanzar(velocidad=1.0):
+def avanzar(velocidad=0.5):
     motor_izquierdo.forward(velocidad)
     motor_derecho.forward(velocidad)
 
-def retroceder(velocidad=1.0):
+def retroceder(velocidad=0.5):
     motor_izquierdo.backward(velocidad)
     motor_derecho.backward(velocidad)
 
@@ -29,11 +32,11 @@ def parar():
 
 try:
     print("Avanzar...")
-    avanzar(0.8)     # velocidad entre 0.0 y 1.0
+    avanzar(0.3)     # velocidad entre 0.0 y 1.0
     sleep(2)
 
     print("Retroceder...")
-    retroceder(0.8)
+    retroceder(0.3)
     sleep(2)
 
     print("Parar")
