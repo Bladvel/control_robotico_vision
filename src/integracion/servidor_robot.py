@@ -6,7 +6,7 @@ import time
 # según la estructura de tu repositorio
 try:
     # (Tu script usa gpiozero por dentro)
-    from control.driver_functionality import avanzar, retroceder, parar
+    from src.control.driver_functionality import avanzar, retroceder, parar
     print("Módulos de motor (gpiozero) cargados exitosamente.")
 except ImportError as e:
     print(f"ADVERTENCIA: No se pudieron cargar los motores: {e}")
