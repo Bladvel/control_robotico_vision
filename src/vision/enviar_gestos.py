@@ -9,12 +9,10 @@ from mediapipe.python.solutions import drawing_utils as mp_drawing
 from mediapipe.python.solutions import hands as mp_hands
 from mediapipe.framework.formats import landmark_pb2
 
-# --- 1. CONFIGURACIÓN DE RED ---
-# ¡CAMBIA ESTA IP por la IP de tu Raspberry Pi!
-IP_RASPBERRY_PI = "192.168.1.39"  # <-- (Ejemplo, usa la tuya)
+IP_RASPBERRY_PI = "192.168.1.39"  
 URL_COMANDO_ROBOT = f"http://{IP_RASPBERRY_PI}:5000/comando"
 
-# Variables para no "spamear" la red con comandos
+
 ultimo_comando_enviado = None
 tiempo_ultimo_comando = 0
 
@@ -40,7 +38,7 @@ def enviar_comando(accion, velocidad=0.3):
             print(f"Error de conexión al enviar {accion}: {e}")
             ultimo_comando_enviado = None 
 
-# --- ¡NUEVA FUNCIÓN! TRADUCTOR DE LANDMARKS ---
+
 def get_finger_states(hand_landmarks):
     """
     Analiza los landmarks de una mano y devuelve un diccionario
@@ -49,7 +47,6 @@ def get_finger_states(hand_landmarks):
     """
     
     # Puntos de referencia: [Punta, Nudillo_Medio]
-    # (Usamos el nudillo medio para más estabilidad)
     finger_points = {
         'index': [8, 6],
         'middle': [12, 10],
@@ -74,10 +71,10 @@ def get_finger_states(hand_landmarks):
         return None
 
     return states
-# --- FIN DE LA NUEVA FUNCIÓN ---
 
-# --- 2. CONFIGURACIÓN DE MEDIAPIPE (Tu código) ---
-model_path = 'hand_landmarker.task' #
+
+# --- 2. CONFIGURACIÓN DE MEDIAPIPE ---
+model_path = 'hand_landmarker.task' 
 if not os.path.exists(model_path):
     print(f"Error: No se encuentra el modelo '{model_path}'.")
     exit()
@@ -90,12 +87,12 @@ VisionRunningMode = vision.RunningMode
 options = HandLandmarkerOptions(
     base_options=BaseOptions(model_asset_path=model_path),
     running_mode=VisionRunningMode.IMAGE,
-    num_hands=1, # Optimizado para 1 mano (más rápido)
+    num_hands=1,
     min_hand_detection_confidence=0.5
 )
 detector = HandLandmarker.create_from_options(options)
 
-# --- 3. CONFIGURACIÓN DE CÁMARA (Nuestros arreglos de WSL) ---
+# --- 3. CONFIGURACIÓN DE CÁMARA  ---
 print("Abriendo cámara (WSL)...")
 cap = cv2.VideoCapture('/dev/video0') 
 if not cap.isOpened():
@@ -107,7 +104,7 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 print("Cámara abierta. Presiona 'ESC' (tecla 27) para salir.")
 
-# --- 4. BUCLE PRINCIPAL (CEREBRO + ENVÍO) ---
+# --- 4. BUCLE PRINCIPAL  ---
 while cap.isOpened():
     ret, frame = cap.read()
 
@@ -116,11 +113,8 @@ while cap.isOpened():
         time.sleep(0.03)
         continue
     
-    # Voltear el frame horizontalmente (efecto espejo)
-    # Esto hace que el control sea más intuitivo
     frame = cv2.flip(frame, 1)
 
-    # --- Lógica de IA (como antes) ---
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
     detection_result = detector.detect(mp_image)
@@ -129,9 +123,7 @@ while cap.isOpened():
 
     # --- Lógica de Dibujo y Gestos ---
     if detection_result.hand_landmarks:
-        # (Itera y dibuja la mano...)
         for hand_landmarks_list in detection_result.hand_landmarks:
-            # (Código de dibujo)
             hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
             hand_landmarks_proto.landmark.extend([
                 landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) 
@@ -144,13 +136,11 @@ while cap.isOpened():
                 mp_drawing.DrawingSpec(color=(250, 44, 250), thickness=2, circle_radius=2)
             )
 
-            # --- ! LÓGICA DE GESTOS MEJORADA ! ---
-            
-            # 1. Obtener el estado de los dedos de la mano detectada
+            # ---  LÓGICA DE GESTOS  ---
+
             finger_states = get_finger_states(hand_landmarks_list) 
             
             if finger_states:
-                # 2. Definir los gestos basados en los estados
                 is_fist = (not finger_states['index'] and
                            not finger_states['middle'] and
                            not finger_states['ring'] and
@@ -173,27 +163,22 @@ while cap.isOpened():
                     comando_actual = "AVANZAR"
                 elif is_pinky_up:
                     comando_actual = "RETROCEDER"
-                # (Si no es ninguno, se queda como "PARAR")
-            
-            # --- Fin del Traductor de Gestos ---
 
-    # Enviamos el comando decidido a la RPi
     enviar_comando(comando_actual)
     
-    # Dibujar el comando en pantalla (para depurar)
+
     cv2.putText(frame, comando_actual, (50, 50), 
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-    # Mostrar el frame (como antes)
+
     cv2.imshow('Cerebro IA (WSL) - Presiona ESC para salir', frame)
 
-    # Lógica de salida
+
     if cv2.waitKey(1) & 0xFF == 27: # 27 = Tecla ESC
         print("Saliendo... enviando comando PARAR final.")
         enviar_comando("PARAR")
         break
 
-# --- 5. LIMPIEZA ---
 cap.release()
 cv2.destroyAllWindows()
 print("Aplicación cerrada.")
