@@ -35,12 +35,14 @@ try:
     avanzar(0.3)     # velocidad entre 0.0 y 1.0
     sleep(0.5)
 
+    print("Parar")
+    parar()
+    sleep(1)
+
     print("Retroceder...")
     retroceder(0.3)
     sleep(0.5)
 
-    print("Parar")
-    parar()
 
 except KeyboardInterrupt:
     parar()
